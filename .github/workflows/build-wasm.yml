@@ -4,11 +4,20 @@ run-name: ${{ github.actor }} is building wasm file. guimods ${{ github.event.in
 on:
     workflow_dispatch:
       inputs:
+        gui_v2_repository:
+          description: "Repository override for gui-v2"
+          type: string
+          #default: victronenergy/gui-v2
         gui_v2_tag:
           description: "Ref to build on github.com/victronenergy/gui-v2"
           required: true
           type: string
-          default: refs/tags/v1.1.30
+          default: refs/heads/main #refs/tags/v1.1.30
+        guimods_apply:
+          description: "Whether to apply guimods from github.com/Sarah-1331/guimods"
+          required: true
+          type: boolean
+          default: false
         guimods_tag:
           description: "Ref to use on github.com/Sarah-1331/guimods"
           required: true
@@ -31,18 +40,20 @@ jobs:
         id: gui_v2_checkout
         with:
           submodules: recursive
-          repository: victronenergy/gui-v2
+          repository: ${{ github.event.inputs.gui_v2_repository }}
           ref: ${{ github.event.inputs.gui_v2_tag }}
 
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
         id: guimods_checkout
+        if: ${{ github.event.inputs.guimods_apply == 'true' }}
         with:
           path: guimods
           repository: Sarah-1331/guimods
           ref: ${{ github.event.inputs.guimods_tag }}
 
       - name: Apply guimods
+        if: ${{ github.event.inputs.guimods_apply == 'true' }}
         shell: bash
         run: |
           # Fake /opt/victronenergy/gui-v2/Victron/VenusOS/components/widgets
@@ -120,4 +131,4 @@ jobs:
         # if: startsWith(github.ref, 'refs/tags/')
         with:
           files: venus-webassembly.zip
-          name: guimods ${{ steps.guimods_checkout.outputs.commit }} + gui-v2 ${{ steps.gui_v2_checkout.outputs.ref }}
+          name: guimods ${{ steps.guimods_checkout.outputs.commit }} + gui-v2 ${{ steps.gui_v2_checkout.outputs.ref }} (${{ steps.guimods_checkout.outputs.commit }})
