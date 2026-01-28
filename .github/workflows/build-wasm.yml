@@ -19,6 +19,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          repository: victronenergy/gui-v2
+
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          path: guimods
+          repository: Sarah-1331/guimods
+
+      - name: Apply guimods
+        shell: bash
+        run: |
+          # Fake /opt/victronenergy/gui-v2/Victron/VenusOS/components/widgets
+          mkdir -p /opt/victronenergy/gui-v2/Victron/VenusOS
+          ln -s $(readlink -f components) /opt/victronenergy/gui-v2/Victron/VenusOS/components
+
+          # Fake reboot
+          reboot () { echo "Reboot called (ignored)" ; }
+
+          # Apply
+          cd guimods
+          . ./install_widgets.sh
 
       - name: Set up environment variables from "scripts/.env" file
         run: |
